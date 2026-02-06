@@ -1,67 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoginPage } from './components/LoginPage';
 import { SignupPage } from './components/SignupPage';
 import { MainPage } from './components/MainPage';
 
 type Page = 'login' | 'signup' | 'main';
 
-interface User {
-  id: string;
-  username: string;
-  nickname: string;
-  email: string;
-}
-
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('login');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const handleLogin = (username: string, password: string) => {
-    // Mock login - 실제로는 백엔드 인증이 필요합니다
-    const mockUser: User = {
-      id: '1',
-      username,
-      nickname: username,
-      email: `${username}@example.com`
-    };
-    setCurrentUser(mockUser);
-    setCurrentPage('main');
-  };
+  // [추가] 앱이 처음 켜질 때 토큰이 있는지 확인
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      setCurrentPage('main'); // 토큰 있으면 바로 메인으로!
+    }
+  }, []);
 
-  const handleSignup = (username: string, password: string, nickname: string, email: string) => {
-    // Mock signup - 실제로는 백엔드에 저장이 필요합니다
-    const newUser: User = {
-      id: Date.now().toString(),
-      username,
-      nickname,
-      email
-    };
-    setCurrentUser(newUser);
+  const handleLoginSuccess = () => {
     setCurrentPage('main');
   };
 
   const handleLogout = () => {
-    setCurrentUser(null);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('nickname');
     setCurrentPage('login');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {currentPage === 'login' && (
-        <LoginPage
-          onLogin={handleLogin}
-          onNavigateToSignup={() => setCurrentPage('signup')}
-        />
-      )}
-      {currentPage === 'signup' && (
-        <SignupPage
-          onSignup={handleSignup}
-          onNavigateToLogin={() => setCurrentPage('login')}
-        />
-      )}
-      {currentPage === 'main' && currentUser && (
-        <MainPage user={currentUser} onLogout={handleLogout} />
-      )}
-    </div>
+      <div className="min-h-screen bg-gray-50">
+        {currentPage === 'login' && (
+            <LoginPage
+                onLoginSuccess={handleLoginSuccess}
+                onNavigateToSignup={() => setCurrentPage('signup')}
+            />
+        )}
+        {currentPage === 'signup' && (
+            <SignupPage
+                onNavigateToLogin={() => setCurrentPage('login')}
+            />
+        )}
+        {currentPage === 'main' && (
+            <MainPage onLogout={handleLogout} />
+        )}
+      </div>
   );
 }
