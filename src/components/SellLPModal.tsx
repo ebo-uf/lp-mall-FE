@@ -196,6 +196,7 @@ export function SellLPModal({ isOpen, onClose, onSubmit }: SellLPModalProps) {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                         required
                     >
+                      <option value="M">M (Mint) - 새것</option>
                       <option value="NM">NM (Near Mint) - 거의 새것</option>
                       <option value="VG++">VG++ (Very Good++) - 매우 좋음</option>
                       <option value="VG+">VG+ (Very Good+) - 좋음</option>
