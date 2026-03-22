@@ -34,7 +34,7 @@ export function SignupPage({ onNavigateToLogin }: SignupPageProps) {
 
     try {
       // 본인의 백엔드 API 주소로 수정 (예: 8082 포트)
-      const response = await axios.post('http://localhost:8000/auth/register', {
+      const response = await axios.post('/auth/register', {
         username: formData.username,
         password: formData.password,
         name: formData.nickname,

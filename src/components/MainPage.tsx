@@ -40,7 +40,7 @@ export function MainPage({ user, onLogout }: MainPageProps) {
       const token = localStorage.getItem('accessToken');
 
       // 2. 요청 보낼 때 헤더에 토큰 넣기
-      const response = await axios.get('http://localhost:8000/products/all', {
+      const response = await axios.get('/products/all', {
         headers: {
           // Bearer 뒤에 한 칸 띄우는 거 잊지 마!
           Authorization: `Bearer ${token}`
@@ -50,7 +50,7 @@ export function MainPage({ user, onLogout }: MainPageProps) {
       const allProducts: LP[] = response.data.map((lp: any) => ({
         ...lp,
         thumbnailPath: lp.thumbnailPath
-            ? `http://localhost:8000/products/images/${lp.thumbnailPath}`
+            ? `/products/images/${lp.thumbnailPath}`
             : 'https://via.placeholder.com/400?text=No+Image',
         saleStartAt: lp.saleStartAt ? new Date(lp.saleStartAt) : undefined
       }));
@@ -86,8 +86,8 @@ export function MainPage({ user, onLogout }: MainPageProps) {
 
       // 2. 타입에 따른 API 경로 설정
       const endpoint = isLimited
-          ? `http://localhost:8000/orders/create-limited`
-          : `http://localhost:8000/orders/create`;
+          ? `/orders/create-limited`
+          : `/orders/create`;
 
       // 3. 주문 API 호출 (보통 productId와 수량을 보냄)
       const response = await axios.post(endpoint,
@@ -123,7 +123,7 @@ export function MainPage({ user, onLogout }: MainPageProps) {
       }
 
       // 실제 백엔드 API 호출
-      const response = await axios.post(`http://localhost:8000/products/create`, formData, {
+      const response = await axios.post(`/products/create`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           // FormData를 보낼 때는 browser가 알아서 boundary를 설정하도록
