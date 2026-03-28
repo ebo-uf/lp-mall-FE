@@ -3,7 +3,7 @@ import type { LP } from './MainPage';
 
 interface LPCardProps {
   lp: LP;
-  onPurchase: (lpId: string) => void;
+  onPurchase: (lpId: number) => void;
 }
 
 export function LPCard({ lp, onPurchase }: LPCardProps) {

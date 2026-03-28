@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Music, LogOut, Clock, Flame, Plus } from 'lucide-react';
 import { LPCard } from './LPCard';
 import { LimitedEditionSection } from './LimitedEditionSection';
-import { SellLPModal, type LPFormData } from './SellLPModal';
+import { SellLPModal } from './SellLPModal';
 import axios from 'axios';
 
 // 인터페이스를 더 유연하게 (필수값 제거)
 interface MainPageProps {
-  user?: any;
+  user?: { nickname?: string };
   onLogout: () => void;
 }
 
@@ -28,26 +28,17 @@ export function MainPage({ user, onLogout }: MainPageProps) {
   const [regularLPs, setRegularLPs] = useState<LP[]>([]);
   const [limitedLPs, setLimitedLPs] = useState<LP[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // 로딩 상태 추가
 
   const displayNickname = user?.nickname || localStorage.getItem('nickname') || '사용자';
 
-  // [핵심] 백엔드에서 상품 목록을 가져오는 함수
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
-      setIsLoading(true);
-      // 게이트웨이를 통해 상품 서비스 호출 (주소는 실제 백엔드 엔드포인트에 맞게 수정 가능)
       const token = localStorage.getItem('accessToken');
-
-      // 2. 요청 보낼 때 헤더에 토큰 넣기
       const response = await axios.get('/products/all', {
-        headers: {
-          // Bearer 뒤에 한 칸 띄우는 거 잊지 마!
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      const allProducts: LP[] = response.data.map((lp: any) => ({
+      const allProducts: LP[] = response.data.map((lp: LP & { thumbnailPath: string; saleStartAt: string }) => ({
         ...lp,
         thumbnailPath: lp.thumbnailPath
             ? `/products/images/${lp.thumbnailPath}`
@@ -59,21 +50,19 @@ export function MainPage({ user, onLogout }: MainPageProps) {
       setLimitedLPs(allProducts.filter(lp => lp.isLimited));
     } catch (error) {
       console.error("상품 로드 실패:", error);
-      // 에러 시 사용자에게 알림 (선택 사항)
-      if (error.response?.status === 401) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
         alert("세션이 만료되었습니다. 다시 로그인해 주세요.");
-        onLogout(); // 로그아웃 처리
+        onLogout();
       }
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [onLogout]);
 
   useEffect(() => {
-    fetchProducts(); // 컴포넌트가 뜨자마자 실행!
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchProducts();
+  }, [fetchProducts]);
 
-  const handlePurchase = async (lpId: string) => {
+  const handlePurchase = async (lpId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -102,14 +91,13 @@ export function MainPage({ user, onLogout }: MainPageProps) {
 
       if (response.status === 200 || response.status === 201) {
         alert("주문이 성공적으로 완료되었습니다! 🎉");
-        // 주문 후 재고가 변했을 수 있으니 목록 새로고침
-        fetchProducts();
+        await fetchProducts();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("주문 실패:", error);
-
-      // 백엔드에서 보낸 에러 메시지가 있다면 표시 (재고 부족 등)
-      const errorMessage = error.response?.data?.message || "주문 처리 중 오류가 발생했습니다.";
+      const errorMessage = axios.isAxiosError(error)
+          ? error.response?.data?.message ?? "주문 처리 중 오류가 발생했습니다."
+          : "주문 처리 중 오류가 발생했습니다.";
       alert(`주문 실패: ${errorMessage}`);
     }
   };
@@ -134,11 +122,14 @@ export function MainPage({ user, onLogout }: MainPageProps) {
 
       if (response.status === 200 || response.status === 201) {
         alert("상품이 성공적으로 등록되었습니다! 🎉");
-        fetchProducts(); // 등록 후 목록을 새로고침해서 방금 올린 상품이 보이게 함
+        await fetchProducts();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("등록 실패:", error);
-      alert(`등록 실패: ${error.response?.data?.message || "서버 오류"}`);
+      const errorMessage = axios.isAxiosError(error)
+          ? error.response?.data?.message ?? "서버 오류"
+          : "서버 오류";
+      alert(`등록 실패: ${errorMessage}`);
     }
   };
 

@@ -4,7 +4,7 @@ import type { LP } from './MainPage';
 
 interface LimitedEditionSectionProps {
   lps: LP[];
-  onPurchase: (lpId: string) => void;
+  onPurchase: (lpId: number) => void;
 }
 
 interface TimeRemaining {
