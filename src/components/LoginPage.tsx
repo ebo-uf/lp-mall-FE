@@ -24,9 +24,18 @@ export function LoginPage({ onLoginSuccess, onNavigateToSignup }: LoginPageProps
 
       if (token) {
         localStorage.setItem('accessToken', token);
-        alert('로그인에 성공했습니다!');
 
-        // 알럿 창을 닫은 직후에 이동하도록 확실히 순서를 보장
+        // 사용자 이름 저장
+        try {
+          const meRes = await axios.get('/users/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          localStorage.setItem('name', meRes.data.name);
+        } catch {
+          // 이름 조회 실패해도 로그인은 진행
+        }
+
+        alert('로그인에 성공했습니다!');
         onLoginSuccess();
       }
     } catch (error: any) {
